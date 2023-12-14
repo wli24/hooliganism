@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { useCompletion } from 'ai/svelte';
 	import type { Article } from '$lib/article';
+	import { goto } from '$app/navigation';
 
 	const { input, handleSubmit, completion } = useCompletion({
 		api: '/api/compose',
@@ -13,14 +14,18 @@
 		'activism',
 		'authoritarianism',
 		'censorship',
+		'corruption',
 		'economic hardship',
 		'elections',
+		'government',
+		'hooliganism',
 		'human rights',
 		'Kremlin',
 		'LGBTQ+',
 		'nationalism',
 		'Navalny',
 		'political prisoners',
+		'Pussy Riot',
 		'Putin',
 		'Prigozhin',
 		'propaganda',
@@ -36,14 +41,21 @@
 
 	async function handleFormSubmit(ev: SubmitEvent): Promise<void> {
 		loading = true;
+
+		const valid = await (await fetch(`/api/validate/${$input}`)).json();
+		if (!valid) {
+			await goto('/oops');
+		}
+
 		handleSubmit(ev);
 		sources = await (await fetch(`/api/search/${$input}`)).json();
 	}
 
 	const parseSong = (song: string) =>
 		song.split('\n\n').map((section) => {
-			const [rawTitle, ...lyrics] = section.split('\n');
-			const title = rawTitle.match(/\w.*\w/)?.[0];
+			const lyrics = section.split('\n');
+			const title = lyrics[0].match(/\w.*\w/)?.[0];
+
 			return {
 				title,
 				lyrics,
@@ -93,7 +105,12 @@
 				sensitivity: 'accent',
 			})}
 			on:click={() => {
-				$input = $input ? '' : topic;
+				if ($input) {
+					$input = '';
+					sources = [];
+				} else {
+					$input = topic;
+				}
 			}}
 			disabled={!!$input &&
 				!!topic.localeCompare($input.trim(), undefined, { sensitivity: 'accent' })}
@@ -111,9 +128,9 @@
 	/>
 </form>
 
-<div class="flex flex-1 gap-3 text-xl">
+<div class="flex-1 flex gap-3 text-xl justify-stretch">
 	<section
-		class="p-3 flex flex-col gap-3 overflow-y-auto rounded-2xl bg-base-200 transition-all"
+		class="overflow-y-auto p-3 flex flex-col gap-3 rounded-2xl bg-base-200 shadow transition-all"
 		class:flex-1={maximizedPanel !== 'sources'}
 	>
 		<button
@@ -123,21 +140,28 @@
 			Lyrics
 		</button>
 
-		{#each parseSong($completion) as { title, lyrics, color }}
-			<div
-				class="p-3 flex flex-col rounded-2xl tooltip-right tooltip-{color} bg-{color} text-{color}-content"
-				class:tooltip={title}
-				data-tip={title}
-			>
-				{#each lyrics as line}
-					<p>{line}</p>
+		<div class="relative">
+			<div class="absolute inset-0 flex flex-col gap-1">
+				{#each parseSong($completion) as { title, lyrics, color }}
+					<div class="p-3 flex flex-col rounded-2xl bg-{color} text-{color}-content" {title}>
+						{#each lyrics as line, i}
+							<p
+								class="transition-opacity"
+								class:opacity-100={maximizedPanel !== 'sources'}
+								class:opacity-0={maximizedPanel === 'sources'}
+								class:font-black={!i}
+							>
+								{line}
+							</p>
+						{/each}
+					</div>
 				{/each}
 			</div>
-		{/each}
+		</div>
 	</section>
 
 	<section
-		class="min-h-full p-3 overflow-y-auto flex flex-col gap-3 rounded-2xl bg-base-200 transition-all"
+		class="overflow-y-auto p-3 flex flex-col gap-3 rounded-2xl bg-base-200 shadow transition-all"
 		class:flex-1={maximizedPanel !== 'lyrics'}
 	>
 		<button
@@ -147,28 +171,34 @@
 			Sources
 		</button>
 
-		<div class="flex flex-wrap justify-stretch gap-3 items-start">
-			{#each maximizedPanel !== 'lyrics' ? sources : [] as source}
-				<div class="card flex-1 rounded-2xl bg-base-100 shadow min-w-[20rem]">
-					<figure class="flex-1">
-						{#if source.image}
-							<img src={source.image} alt="Thumbnail for article {source.title}" />
-						{/if}
-					</figure>
+		<div class="relative">
+			<div class="absolute inset-0 flex flex-wrap justify-stretch gap-3 items-start">
+				{#each sources as source}
+					<div
+						class="flex-1 card rounded-2xl bg-base-100 shadow min-w-[20rem] transition-opacity"
+						class:opacity-100={maximizedPanel !== 'lyrics'}
+						class:opacity-0={maximizedPanel === 'lyrics'}
+					>
+						<figure class="flex-1">
+							{#if source.image}
+								<img src={source.image} alt="Thumbnail for article {source.title}" />
+							{/if}
+						</figure>
 
-					<div class="card-body flex-none">
-						<a class="card-title" href={source.url}>
-							{source.title}
-							<br />
-							<span class="text-sm">{source.source}, {source.relative_time}</span>
-						</a>
-						<p>{@html source.excerpt}</p>
-						<div class="card-actions justify-end">
-							<a class="btn btn-secondary" href={source.url}>Read</a>
+						<div class="card-body flex-none">
+							<a class="card-title" href={source.url}>
+								{source.title}
+								<br />
+								<span class="text-sm">{source.source}, {source.relative_time}</span>
+							</a>
+							<p>{@html source.excerpt}</p>
+							<div class="card-actions justify-end">
+								<a class="btn btn-secondary" href={source.url}>Read</a>
+							</div>
 						</div>
 					</div>
-				</div>
-			{/each}
+				{/each}
+			</div>
 		</div>
 	</section>
 </div>

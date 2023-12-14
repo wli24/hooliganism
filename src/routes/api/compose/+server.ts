@@ -4,13 +4,13 @@ import { OpenAI } from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { decode } from 'html-entities';
 
-const systemPrompt = `Write a punk song about the topic given in the next message using the news articles given in the message after as context.`;
-
-const openai = new OpenAI({});
-
 export const config = {
 	runtime: 'edge',
 };
+
+const systemPrompt = `Write a punk song about the topic given in the next message using the news articles given in the message after as context.`;
+
+const openai = new OpenAI({});
 
 export const POST: RequestHandler = async ({ request }) => {
 	const { prompt } = await request.json();
@@ -18,10 +18,10 @@ export const POST: RequestHandler = async ({ request }) => {
 	const articles = await getArticles(prompt);
 
 	const response = await openai.chat.completions.create({
-		model: 'gpt-3.5-turbo',
+		model: 'gpt-3.5-turbo-1106',
 		messages: [
 			{ role: 'system', content: systemPrompt },
-			{ role: 'user', content: prompt },
+			{ role: 'user', content: `"""${prompt}"""` },
 			{ role: 'user', content: formatArticles(articles) },
 		],
 		max_tokens: 2000,

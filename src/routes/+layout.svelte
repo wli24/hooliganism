@@ -5,13 +5,13 @@
 
 <div class="flex w-screen h-screen flex-col gap-3">
 	<div
-		class="flex-none navbar sticky bg-gradient-to-b from-white from-10% via-cyan-200 to-primary to-90% shadow"
+		class="flex-none sticky navbar bg-gradient-to-b from-white from-10% via-cyan-200 to-red-300 to-90% shadow"
 	>
 		<div class="navbar-start" />
 
 		<div class="navbar-center">
 			<img class="w-24" src={amogus} alt="Amogus Club Penguin Dance" />
-			<a href="/" class="text-4xl font-black">hooliganism hooliganism</a>
+			<a href="/" class="text-4xl font-black hidden md:inline">hooliganism hooliganism</a>
 			<img class="w-24" src={amogus} alt="Amogus Club Penguin Dance" />
 		</div>
 

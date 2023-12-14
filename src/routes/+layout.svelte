@@ -3,7 +3,7 @@
 	import amogus from '$lib/assets/amogus.gif';
 </script>
 
-<div class="flex w-screen h-screen flex-col gap-3">
+<div class="flex w-screen h-[100dvh] flex-col gap-3">
 	<div
 		class="flex-none sticky navbar bg-gradient-to-b from-white from-10% via-cyan-200 to-red-300 to-90% shadow"
 	>

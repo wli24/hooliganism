@@ -202,3 +202,10 @@
 		</div>
 	</section>
 </div>
+
+<style lang="postcss">
+	:global(html, body) {
+		overflow: hidden;
+		position: fixed;
+	}
+</style>
